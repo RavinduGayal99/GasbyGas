@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Customer Dashboard</title>
+    <style>
+        /* Previous styles remain unchanged */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+        }
+
+        .dashboard-content {
+            padding: 2rem 5%;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .request-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .request-table th,
+        .request-table td {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .request-table th {
+            background-color: #f5f5f5;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            cursor: pointer;
+            font-size: 1.5rem;
+            border: none;
+            background: none;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .form-group input:disabled {
+            background-color: #f5f5f5;
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .cancel-btn {
+            background: #dc3545;
+        }
+
+        .cancel-btn:hover {
+            background: #c82333;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .filter-container {
+            margin-bottom: 1rem;
+        }
+
+        .filter-select {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 1rem;
+        }
+
+        .account-container {
+            position: relative;
+        }
+
+        .account-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            min-width: 150px;
+            z-index: 1000;
+        }
+
+        .account-dropdown.show {
+            display: block;
+        }
+
+        .account-dropdown a {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+        }
+
+        .account-dropdown a:hover {
+            background-color: #f5f5f5;
+        }
+
+        #accountBtn {
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #accountBtn:hover {
+            background: #0056b3;
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .modal-header {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .close-btn {
+            background-color: transparent;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+<nav>
+    <div class="logo">Logo</div>
+    <div class="nav-links">
+        <a href="#about">About</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#dealer-locations">Dealer Locations</a>
+        <a href="#contact">Contact Us</a>
+    </div>
+    <div class="account-container">
+        <button id="accountBtn" onclick="toggleAccountDropdown()">Account</button>
+        <div class="account-dropdown" id="accountDropdown">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/profile">Profile</a>
+            <a href="#" onclick="logout()">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="dashboard-content">
+    <div class="dashboard-header">
+        <select class="filter-select" id="statusFilter">
+            <option value="PENDING_VERIFICATION">Pending Verification</option>
+            <option value="VERIFIED">Verified</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="REJECTED">Rejected</option>
+        </select>
+        <button onclick="toggleRequestModal()">Request Gas</button>
+    </div>
+
+    <div class="table-container">
+        <table class="request-table">
+            <thead>
+            <tr>
+                <th>Item</th>
+                <th>Outlet</th>
+                <th>Unit Price</th>
+                <th>Quantity</th>
+                <th>Total Price</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody id="requestTableBody">
+            <!-- Table content will be dynamically populated -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="requestModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Gas Request</h2>
+            <button class="close-btn" onclick="toggleRequestModal()">&times;</button>
+        </div>
+        <form id="gasRequestForm" onsubmit="handleGasRequest(event)">
+            <div class="form-group">
+                <label>Select Outlet</label>
+                <select name="outlet" required>
+                    <!-- Outlets will be populated dynamically -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Item</label>
+                <input type="text" name="item" readonly>
+            </div>
+            <div class="form-group">
+                <label>Quantity (kg)</label>
+                <input type="number" name="quantity" required min="1" onchange="updateTotalPrice()">
+            </div>
+            <div class="form-group">
+                <label>Unit Price (Rs.)</label>
+                <input type="number" name="unitPrice" disabled>
+            </div>
+            <div class="form-group">
+                <label>Total Price (Rs.)</label>
+                <input type="number" name="totalPrice" disabled>
+            </div>
+            <button type="submit">Request</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    let userGasType = '';
+    const userId = localStorage.getItem('userId');
+    const baseUrl = 'http://localhost:8080/api';
+
+    // Initialize user gas type on page load
+    async function initializeUserData() {
+        try {
+            const response = await fetch(`${baseUrl}/user/profile`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            const userData = await response.json();
+            userGasType = userData.gasType;
+
+            const gasTypeUrl = `${baseUrl}/gas/business/${userGasType.toLowerCase()}`;
+            const gasTypeResponse = await fetch(gasTypeUrl);
+            const gasTypeData = await gasTypeResponse.json();
+
+            document.querySelector('input[name="item"]').value = gasTypeData.item;
+            document.querySelector('input[name="unitPrice"]').value = gasTypeData.price;
+            updateTotalPrice();
+        } catch (error) {
+            console.error('Error loading user data:', error);
+        }
+    }
+
+    // Toggle request modal
+    function toggleRequestModal() {
+        const modal = document.getElementById('requestModal');
+        modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+        if (modal.style.display === 'flex') {
+            loadOutlets();
+        }
+    }
+
+    // Load outlets
+    async function loadOutlets() {
+        try {
+            const response = await fetch(`${baseUrl}/outlets`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            const outlets = await response.json();
+            const select = document.querySelector('select[name="outlet"]');
+            select.innerHTML = '<option value="">Select Outlet</option>' +
+                outlets.map(outlet =>
+                    `<option value="${outlet.id}">${outlet.name}</option>`
+                ).join('');
+        } catch (error) {
+            console.error('Error loading outlets:', error);
+        }
+    }
+
+    // Update total price
+    function updateTotalPrice() {
+        const quantity = document.querySelector('input[name="quantity"]').value;
+        const unitPrice = document.querySelector('input[name="unitPrice"]').value;
+        const totalPriceInput = document.querySelector('input[name="totalPrice"]');
+        totalPriceInput.value = quantity * unitPrice || '';
+    }
+
+    // Handle gas request submission
+    async function handleGasRequest(event) {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const data = {
+            outletId: formData.get('outlet'),
+            item: formData.get('item'),
+            quantity: parseInt(formData.get('quantity')),
+            unitPrice: parseFloat(formData.get('unitPrice')),
+            totalPrice: parseFloat(formData.get('totalPrice'))
+        };
+
+        try {
+            const response = await fetch(`${baseUrl}/gas/request/business`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                alert('Gas request submitted successfully');
+                toggleRequestModal();
+                loadRequests();
+                event.target.reset();
+            } else {
+                const error = await response.json();
+                alert(error.message || 'Failed to submit request');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while submitting request');
+        }
+    }
+
+    // Load gas requests
+    async function loadRequests() {
+        const status = document.getElementById('statusFilter').value;
+
+        try {
+            const response = await fetch(`${baseUrl}/gas/requests?userId=${userId}&status=${status}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            const requests = await response.json();
+
+            const tableBody = document.getElementById('requestTableBody');
+            tableBody.innerHTML = requests.map(request => `
+                    <tr>
+                        <td>${request.item}</td>
+                        <td>${request.outletName}</td>
+                        <td>Rs. ${request.unitPrice}</td>
+                        <td>${request.quantity}</td>
+                        <td>Rs. ${request.totalPrice}</td>
+                        <td>${request.status}</td>
+                        <td>
+                            ${(['PENDING_VERIFICATION', 'VERIFIED'].includes(request.status))
+                ? `<button class="cancel-btn" onclick="cancelRequest('${request.id}')">Cancel Request</button>`
+                : ''}
+                        </td>
+                    </tr>
+                `).join('');
+        } catch (error) {
+            console.error('Error loading requests:', error);
+        }
+    }
+
+    // Cancel request
+    async function cancelRequest(requestId) {
+        if (!confirm('Are you sure you want to cancel this request?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${baseUrl}/gas/business/requests/${requestId}/cancel`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (response.ok) {
+                alert('Request cancelled successfully');
+                loadRequests();
+            } else {
+                const error = await response.json();
+                alert(error.message || 'Failed to cancel request');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while cancelling request');
+        }
+    }
+
+    // Account dropdown functions
+    function toggleAccountDropdown() {
+        const dropdown = document.getElementById('accountDropdown');
+        dropdown.classList.toggle('show');
+    }
+
+    document.addEventListener('click', function(event) {
+        const accountContainer = document.querySelector('.account-container');
+        const dropdown = document.getElementById('accountDropdown');
+
+        if (!accountContainer.contains(event.target)) {
+            dropdown.classList.remove('show');
+        }
+    });
+
+    document.getElementById('accountDropdown').addEventListener('click', function(event) {
+        event.stopPropagation();
+    });
+
+    function logout() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userId');
+        window.location.href = '/index.html';
+    }
+
+    // Initialize the dashboard
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeUserData();
+        loadRequests();
+    });
+
+    // Prevent modal close on outside click
+    document.getElementById('requestModal').addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+</script>
+</body>
+</html>

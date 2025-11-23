@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gas Outlet Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            padding: 0.5rem 1rem;
+        }
+
+        .account-container {
+            position: relative;
+        }
+
+        .account-btn {
+            padding: 0.5rem 1rem;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .account-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 4px;
+            min-width: 150px;
+            z-index: 1000;
+        }
+
+        .account-dropdown.show {
+            display: block;
+        }
+
+        .account-dropdown a {
+            display: block;
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            color: #333;
+        }
+
+        .account-dropdown a:hover {
+            background: #f5f5f5;
+        }
+
+        .main-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .dashboard-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+
+        .status-dropdown {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-width: 200px;
+        }
+
+        .request-gas-btn {
+            padding: 0.5rem 1rem;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            overflow-x: auto;
+        }
+
+        .table-title {
+            padding: 1rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            min-width: 500px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 1rem;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        footer {
+            background: #f8f9fa;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+<nav>
+    <div class="logo">Logo</div>
+    <div class="nav-links">
+        <a href="#about">About</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#dealer-locations">Dealer Locations</a>
+        <a href="#contact">Contact Us</a>
+    </div>
+    <div class="account-container">
+        <button class="account-btn" onclick="toggleAccount()">Account</button>
+        <div class="account-dropdown" id="accountDropdown">
+            <a href="#profile">Profile</a>
+            <a href="#settings">Settings</a>
+            <a href="#logout">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="main-content">
+    <div class="dashboard-controls">
+        <select class="status-dropdown" id="requestFilter" onchange="filterRequests()">
+            <option value="">All Status</option>
+            <option value="PENDING_VERIFICATION">Pending Verification</option>
+            <option value="VERIFIED">Verified</option>
+            <option value="PAID">Paid</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="REALLOCATED">Reallocated</option>
+            <option value="REJECTED">Rejected</option>
+        </select>
+        <button class="request-gas-btn" onclick="openModal()">Request Gas</button>
+    </div>
+
+    <div class="table-container">
+        <div class="table-title">Customer Requests</div>
+        <table id="customerRequestsTable">
+            <thead>
+            <tr>
+                <th>Item</th>
+                <th>Outlet</th>
+                <th>Unit Price</th>
+                <th>Quantity</th>
+                <th>Total Price</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody id="customerRequestsBody"></tbody>
+        </table>
+    </div>
+
+    <div class="table-container">
+        <div class="table-title">Stock Available</div>
+        <table id="stockTable">
+            <thead>
+            <tr>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody id="stockBody"></tbody>
+        </table>
+    </div>
+
+    <div class="table-container">
+        <div class="table-title">Scheduled Orders</div>
+        <table id="scheduledOrdersTable">
+            <thead>
+            <tr>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody id="scheduledOrdersBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal" id="gasRequestModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Update Stock</h2>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <form id="updateStockForm" onsubmit="handleStockUpdate(event)">
+            <div class="form-group">
+                <label for="gasId">Gas ID</label>
+                <input type="text" id="gasId" required readonly>
+            </div>
+            <div class="form-group">
+                <label for="quantity">New Quantity</label>
+                <input type="number" id="quantity" required min="0">
+            </div>
+            <button type="submit" class="request-gas-btn">Update Stock</button>
+        </form>
+    </div>
+</div>
+
+<div class="loading" id="loadingIndicator">Loading...</div>
+
+<script>
+    const outletId = '123'; // Replace with actual outlet ID
+    const baseUrl = 'http://localhost:8080';
+
+    async function fetchRequests(status = '') {
+        showLoading();
+        try {
+            const url = `${baseUrl}/api/gas/requests/outlet/${outletId}/filter${status ? `?statusFilter=${status}` : ''}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            displayRequests(data);
+        } catch (error) {
+            console.error('Error fetching requests:', error);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    async function updateRequestStatus(requestId, status) {
+        showLoading();
+        try {
+            await fetch(`${baseUrl}/api/gas/requests/outlet/${requestId}/status?status=${status}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            await fetchRequests(document.getElementById('requestFilter').value);
+        } catch (error) {
+            console.error('Error updating status:', error);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    async function updateStock(event) {
+        event.preventDefault();
+        showLoading();
+        const gasId = document.getElementById('gasId').value;
+        const quantity = document.getElementById('quantity').value;
+        try {
+            await fetch(`${baseUrl}/api/outlet/${outletId}/stock?gasId=${gasId}&quantity=${quantity}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            closeModal();
+            await fetchStock();
+        } catch (error) {
+            console.error('Error updating stock:', error);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    async function fetchScheduledOrders() {
+        showLoading();
+        try {
+            const response = await fetch(`${baseUrl}/api/gas/requests/outlet?outletId=${outletId}&status=VERIFIED`);
+            const data = await response.json();
+            displayScheduledOrders(data);
+        } catch (error) {
+            console.error('Error fetching scheduled orders:', error);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    function displayRequests(requests) {
+        const tbody = document.getElementById('customerRequestsBody');
+        tbody.innerHTML = requests.map(request => `
+                <tr>
+                    <td>${request.item}</td>
+                    <td>${request.outlet}</td>
+                    <td>${request.unitPrice}</td>
+                    <td>${request.quantity}</td>
+                    <td>${request.totalPrice}</td>
+                    <td>${request.status}</td>
+                    <td>
+                        <select onchange="updateRequestStatus('${request.id}', this.value)">
+                            <option value="">Update Status</option>
+                            <option value="PENDING_VERIFICATION">Pending Verification</option>
+                            <option value="VERIFIED">Verified</option>
+                            <option value="PAID">Paid</option>
+                            <option value="COMPLETED">Completed</option>
+                            <option value="REALLOCATED">Reallocated</option>
+                            <option value="REJECTED">Rejected</option>
+                        </select>
+                    </td>
+                </tr>
+            `).join('');
+    }
+
+    function filterRequests() {
+        const status = document.getElementById('requestFilter').value;
+        fetchRequests(status);
+    }
+
+    function showLoading() {
+        document.getElementById('loadingIndicator').classList.add('show');
+    }
+
+    function hideLoading() {
+        document.getElementById('loadingIndicator').classList.remove('show');
+    }
+
+    function openModal(gasId = '') {
+        document.getElementById('gasId').value = gasId;
+        document.getElementById('gasRequestModal').classList.add('show');
+    }
+
+    function closeModal() {
+        document.getElementById('gasRequestModal').classList.remove('show');
+    }
+
+    function toggleAccount() {
+        document.getElementById('accountDropdown').classList.toggle('show');
+    }
+
+    // Close dropdown when clicking outside
+    window.onclick = function(event) {
+        if (!event.target.matches('.account-btn')) {
+            var dropdowns = document.getElementsByClassName('account-dropdown');
+            for (var i = 0; i < dropdowns.length; i++) {
+                var openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+        }
+    }
+
+    // Initial load
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchRequests();
+        fetchScheduledOrders();
+    });
+</script>
+</body>
+</html>
