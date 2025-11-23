@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+        }
+
+        .dashboard-content {
+            padding: 2rem 5%;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .table-container {
+            margin-bottom: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .customer-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .customer-table th {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .customer-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .status-select {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 0.5rem;
+        }
+
+        .filter-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
+        }
+
+        .report-buttons {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .report-btn {
+            padding: 0.5rem 1rem;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .report-btn:hover {
+            background: #0056b3;
+        }
+
+        footer {
+            background: #f8f9fa;
+            padding: 2rem 5%;
+            margin-top: 2rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+        }
+
+        .footer-section h3 {
+            margin-bottom: 1rem;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .account-container {
+            position: relative;
+        }
+
+        .account-btn {
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .account-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            min-width: 150px;
+            z-index: 1000;
+        }
+
+        .account-dropdown.show {
+            display: block;
+        }
+
+        .account-dropdown a {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+        }
+
+        .account-dropdown a:hover {
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">Logo</div>
+        <div class="nav-links">
+            <a href="#about">About</a>
+            <a href="#pricing">Pricing</a>
+            <a href="#dealer-locations">Dealer Locations</a>
+            <a href="#contact">Contact Us</a>
+        </div>
+        <div class="account-container">
+            <button class="account-btn" onclick="toggleAccountDropdown()">Account</button>
+            <div class="account-dropdown" id="accountDropdown">
+                <a href="/dashboard">Dashboard</a>
+                <a href="/profile">Profile</a>
+                <a href="#" onclick="logout()">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-content">
+        <!-- Domestic Customers Section -->
+        <h2 class="section-title">Domestic Customers</h2>
+        <div class="filter-container">
+            <select class="status-select" id="domesticStatusFilter" onchange="loadDomesticCustomers()">
+                <option value="PENDING_VERIFICATION">Pending verification</option>
+                <option value="VERIFIED">Verified</option>
+                <option value="BLOCKED">Blocked</option>
+            </select>
+        </div>
+        <div class="table-container">
+            <table class="customer-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Contact</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="domesticCustomersTable">
+                    <!-- Domestic customers data will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Business Customers Section -->
+        <h2 class="section-title">Business Customers</h2>
+        <div class="filter-container">
+            <select class="status-select" id="businessStatusFilter" onchange="loadBusinessCustomers()">
+                <option value="PENDING_CERTIFICATION">Pending certification</option>
+                <option value="VERIFIED">Verified</option>
+                <option value="BLOCKED">Blocked</option>
+            </select>
+        </div>
+        <div class="table-container">
+            <table class="customer-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Contact</th>
+                        <th>Gas Type</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="businessCustomersTable">
+                    <!-- Business customers data will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Outlets Section -->
+        <h2 class="section-title">Outlets</h2>
+        <div class="filter-container">
+            <select class="status-select" id="outletStatusFilter" onchange="loadOutlets()">
+                <option value="PENDING_VERIFICATION">Pending verification</option>
+                <option value="VERIFIED">Verified</option>
+                <option value="BLOCKED">Blocked</option>
+            </select>
+        </div>
+        <div class="table-container">
+            <table class="customer-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Contact</th>
+                        <th>Type</th>
+                        <th>District</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="outletsTable">
+                    <!-- Outlets data will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Report Generation Section -->
+        <div class="report-buttons">
+            <select class="status-select" id="outletSelect">
+                <option value="">Select Outlet</option>
+            </select>
+            <select class="status-select" id="businessSelect">
+                <option value="">Select Business</option>
+            </select>
+            <button class="report-btn" onclick="generatePerformanceReport()">Generate Performance Report</button>
+            <button class="report-btn" onclick="generateAnalysisReport()">Generate Analysis Report</button>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <div class="logo">Logo</div>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="#about">About Us</a></li>
+                    <li><a href="#pricing">Pricing</a></li>
+                    <li><a href="#dealer-locations">Dealer Locations</a></li>
+                    <li><a href="#privacy">Privacy Policy</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Contact Us</h3>
+                <ul>
+                    <li>Address</li>
+                    <li>Email</li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Phone</h3>
+                <p>Contact Number</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Load domestic customers
+        async function loadDomesticCustomers() {
+            const status = document.getElementById('domesticStatusFilter').value;
+            try {
+                const response = await fetch(`http://localhost:8080/api/admin/users/domestic?status=${status}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                const customers = await response.json();
+                
+                document.getElementById('domesticCustomersTable').innerHTML = customers.map(customer => `
+                    <tr>
+                        <td>${customer.name}</td>
+                        <td>${customer.email}</td>
+                        <td>${customer.contact}</td>
+                        <td>${customer.status}</td>
+                        <td>
+                            <select class="status-select" onchange="updateCustomerStatus('domestic', '${customer.id}', this.value)">
+                                <option value="">Change Status</option>
+                                <option value="VERIFIED">VERIFIED</option>
+                                <option value="BLOCKED">BLOCKED</option>
+                            </select>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading domestic customers:', error);
+            }
+        }
+
+        // Load business customers
+        async function loadBusinessCustomers() {
+            const status = document.getElementById('businessStatusFilter').value;
+            try {
+                const response = await fetch(`http://localhost:8080/api/admin/users/business?status=${status}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                const customers = await response.json();
+                
+                document.getElementById('businessCustomersTable').innerHTML = customers.map(customer => `
+                    <tr>
+                        <td>${customer.name}</td>
+                        <td>${customer.email}</td>
+                        <td>${customer.contact}</td>
+                        <td>${customer.gasType}</td>
+                        <td>${customer.status}</td>
+                        <td>
+                            <select class="status-select" onchange="updateCustomerStatus('business', '${customer.id}', this.value)">
+                                <option value="">Change Status</option>
+                                <option value="VERIFIED">VERIFIED</option>
+                                <option value="BLOCKED">BLOCKED</option>
+                            </select>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading business customers:', error);
+            }
+        }
+
+        // Load outlets
+        async function loadOutlets() {
+            const status = document.getElementById('outletStatusFilter').value;
+            try {
+                const response = await fetch(`http://localhost:8080/api/admin/users/outlet?status=${status}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                const outlets = await response.json();
+                
+                document.getElementById('outletsTable').innerHTML = outlets.map(outlet => `
+                    <tr>
+                        <td>${outlet.name}</td>
+                        <td>${outlet.email}</td>
+                        <td>${outlet.contact}</td>
+                        <td>${outlet.type}</td>
+                        <td>${outlet.district}</td>
+                        <td>${outlet.status}</td>
+                        <td>
+                            <select class="status-select" onchange="updateOutletStatus('${outlet.id}', this.value)">
+                                <option value="">Change Status</option>
+                                <option value="VERIFIED">VERIFIED</option>
+                                <option value="BLOCKED">BLOCKED</option>
+                            </select>
+                        </td>
+                    </tr>
+                `).join('');
+
+                // Update outlet dropdown
+                const outletSelect = document.getElementById('outletSelect');
+                outletSelect.innerHTML = '<option value="">Select Outlet</option>' + 
+                    outlets.map(outlet => `<option value="${outlet.id}">${outlet.name}</option>`).join('');
+            } catch (error) {
+                console.error('Error loading outlets:', error);
+            }
+        }
+
+        // Update customer status
+        async function updateCustomerStatus(type, userId, status) {
+            try {
+                const response = await fetch(`http://localhost:8080/api/admin/users/${userId}/status?status=${status}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (response.ok) {
+                    // Refresh the appropriate table based on customer type
+                    if (type === 'domestic') {
+                        loadDomesticCustomers();
+                    } else {
+                        loadBusinessCustomers();
+                    }
+                } else {
+                    throw new Error(`Failed to update status: ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('Error updating customer status:', error);
+                alert('Failed to update customer status');
+            }
+        }
+
+        // Update outlet status
+        async function updateOutletStatus(userId, status) {
+            try {
+                const response = await fetch(`http://localhost:8080/api/admin/users/${userId}/status?status=${status}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (response.ok) {
+                    loadOutlets();
+                } else {
+                    throw new Error(`Failed to update status: ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('Error updating outlet status:', error);
+                alert('Failed to update outlet status');
+            }
+        }
+
+        // Generate performance report
+        async function generatePerformanceReport() {
+            const outletId = document.getElementById('outletSelect').value;
+            if (!outletId) {
+                alert('Please select an outlet');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/admin/reports/performance?outletId=${outletId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'performance-report.pdf';
+                a.click();
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Error generating performance report:', error);
+                alert('Failed to generate performance report');
+            }
+        }
+
+        // Generate analysis report
+        async function generateAnalysisReport() {
+            const businessId = document.getElementById('businessSelect').value;
+            if (!businessId) {
+                alert('Please select a business');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/admin/reports/analysis?businessId=${businessId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'analysis-report.pdf';
+                a.click();
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Error generating analysis report:', error);
+                alert('Failed to generate analysis report');
+            }
+        }
+
+        // Load business customers for dropdown
+        async function loadBusinessCustomersDropdown() {
+            try {
+                const response = await fetch('/api/admin/business-customers', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                const customers = await response.json();
+                
+                const businessSelect = document.getElementById('businessSelect');
+                businessSelect.innerHTML = '<option value="">Select Business</option>' + 
+                    customers.map(customer => `<option value="${customer.id}">${customer.name}</option>`).join('');
+            } catch (error) {
+                console.error('Error loading business customers:', error);
+            }
+        }
+
+        // Toggle account dropdown
+        function toggleAccountDropdown() {
+            const dropdown = document.getElementById('accountDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const accountContainer = document.querySelector('.account-container');
+            const dropdown = document.getElementById('accountDropdown');
+            
+            if (!accountContainer.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDomesticCustomers();
+            loadBusinessCustomers();
+            loadOutlets();
+            loadBusinessCustomersDropdown();
+        });
+    </script>
+</body>
+</html>

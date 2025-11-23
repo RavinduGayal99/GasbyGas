@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+        }
+
+        /* Account Container Styles */
+        .account-container {
+            position: relative;
+        }
+
+        .account-btn {
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .account-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            min-width: 150px;
+        }
+
+        .account-dropdown.show {
+            display: block;
+        }
+
+        .account-dropdown a {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+        }
+
+        .account-dropdown a:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Main Content */
+        .dashboard-content {
+            padding: 2rem 5%;
+            min-height: calc(100vh - 64px - 200px); /* Account for header and footer */
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        /* Table Styles */
+        .request-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .request-table th,
+        .request-table td {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .request-table th {
+            background-color: #f8f9fa;
+        }
+
+        /* Footer Styles */
+        footer {
+            background: #f8f9fa;
+            padding: 2rem 5%;
+            margin-top: 2rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+        }
+
+        .footer-section h3 {
+            margin-bottom: 1rem;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .close-btn {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            cursor: pointer;
+            font-size: 1.5rem;
+            border: none;
+            background: none;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .form-group input:disabled {
+            background-color: #f5f5f5;
+        }
+
+        /* Button Styles */
+        button {
+            padding: 0.5rem 1rem;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .cancel-btn {
+            background: #dc3545;
+        }
+
+        .cancel-btn:hover {
+            background: #c82333;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Filter Styles */
+        .filter-container {
+            margin-bottom: 1rem;
+        }
+
+        .filter-select {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 1rem;
+        }
+        .close-btn {
+            background-color: transparent;
+            color: #333;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="logo">Logo</div>
+        <div class="nav-links">
+            <a href="#about">About</a>
+            <a href="#pricing">Pricing</a>
+            <a href="#dealer-locations">Dealer Locations</a>
+            <a href="#contact">Contact Us</a>
+        </div>
+        <div class="account-container">
+            <button class="account-btn" onclick="toggleAccountDropdown()">Account</button>
+            <div class="account-dropdown" id="accountDropdown">
+                <a href="/dashboard">Dashboard</a>
+                <a href="/profile">Profile</a>
+                <a href="#" onclick="logout()">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Content -->
+    <div class="dashboard-content">
+        <div class="dashboard-header">
+            <select class="filter-select" id="statusFilter">
+                <option value="PENDING_VERIFICATION">Pending</option>
+                <option value="COMPLETED">Finalized</option>
+            </select>
+            <button onclick="toggleRequestModal()">Request Gas</button>
+        </div>
+
+        <!-- Gas Requests Table -->
+        <table class="request-table">
+            <thead>
+                <tr>
+                    <th>Token ID</th>
+                    <th>Pickup Date</th>
+                    <th>Item</th>
+                    <th>Unit Price</th>
+                    <th>Quantity</th>
+                    <th>Total Price</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="requestTableBody">
+                <!-- Table content will be dynamically populated -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Gas Request Modal -->
+    <div id="requestModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Gas Request</h2>
+                <button class="close-btn" onclick="toggleRequestModal()">&times;</button>
+            </div>
+            <form id="gasRequestForm" onsubmit="handleGasRequest(event)">
+                <div class="form-group">
+                    <label>Select Outlet</label>
+                    <select name="outlet" required>
+                        <!-- Outlets will be populated dynamically -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Select Gas Type</label>
+                    <select name="gasId" required onchange="updateUnitPrice()">
+                        <!-- Gas items will be populated from API -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" name="quantity" required min="1" max="1" value="1" readonly onchange="updateTotalPrice()">
+                </div>
+                <div class="form-group">
+                    <label>Unit Price (Rs.)</label>
+                    <input type="number" name="unitPrice" disabled>
+                </div>
+                <div class="form-group">
+                    <label>Total Price (Rs.)</label>
+                    <input type="number" name="totalPrice" disabled>
+                </div>
+                <button type="submit">Request</button>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <div class="logo">Logo</div>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="#about">About Us</a></li>
+                    <li><a href="#pricing">Pricing</a></li>
+                    <li><a href="#dealer-locations">Dealer Locations</a></li>
+                    <li><a href="#privacy">Privacy Policy</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Contact Us</h3>
+                <ul>
+                    <li>Address</li>
+                    <li>Email</li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Phone</h3>
+                <p>Contact Number</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Toggle account dropdown
+        function toggleAccountDropdown() {
+            const dropdown = document.getElementById('accountDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const accountContainer = document.querySelector('.account-container');
+            const dropdown = document.getElementById('accountDropdown');
+
+            if (!accountContainer.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userId');
+            window.location.href = 'index.html';
+        }
+
+        // Load gas requests
+        async function loadRequests() {
+            const filterValue = document.getElementById('statusFilter').value;
+            const userId = localStorage.getItem('userId');
+
+            try {
+                const response = await fetch(`http://localhost:8080/api/gas/requests?userId=${userId}&status=${filterValue}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                const requests = await response.json();
+
+                const tableBody = document.getElementById('requestTableBody');
+                tableBody.innerHTML = requests.map(request => `
+                    <tr>
+                        <td>${request.tokenId}</td>
+                        <td>${request.pickupDate}</td>
+                        <td>${request.item}</td>
+                        <td>${request.unitPrice}</td>
+                        <td>${request.quantity}</td>
+                        <td>${request.totalPrice}</td>
+                        <td>${request.status}</td>
+                        <td>
+                            ${(['PENDING_VERIFICATION', 'VERIFIED'].includes(request.status))
+                    ? `<button class="cancel-btn" onclick="cancelRequest('${request.tokenId}')">Cancel Request</button>`
+                    : ''}
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading requests:', error);
+            }
+        }
+
+        // Cancel request
+        async function cancelRequest(tokenId) {
+            if (!confirm('Are you sure you want to cancel this request?')) {
+                return;
+            }
+
+            const userId = localStorage.getItem('userId');
+
+            try {
+                const response = await fetch(`http://localhost:8080/api/gas/requests/${tokenId}/cancel?userId=${userId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Request cancelled successfully');
+                    loadRequests();
+                } else {
+                    const error = await response.json();
+                    alert(error.message || 'Failed to cancel request');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while cancelling request');
+            }
+        }
+
+        // Handle gas request submission
+        async function handleGasRequest(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const userId = localStorage.getItem('userId');
+
+            // Get the selected gas item's unit price from the data attribute
+            const gasSelect = document.querySelector('select[name="gasId"]');
+            const selectedOption = gasSelect.options[gasSelect.selectedIndex];
+            const unitPrice = parseFloat(selectedOption.dataset.price);
+
+            // Calculate total price
+            const quantity = parseInt(formData.get('quantity'));
+            const totalPrice = unitPrice * quantity;
+
+            const data = {
+                userId: userId,
+                outletId: formData.get('outlet'),
+                gasId: formData.get('gasId'),  // Changed from item to gasId
+                quantity: quantity,
+                unitPrice: unitPrice,
+                totalPrice: totalPrice
+            };
+
+            try {
+                const response = await fetch('http://localhost:8080/api/gas/request/domestic', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    alert('Gas request submitted successfully');
+                    toggleRequestModal();
+                    loadRequests();
+                    event.target.reset();
+                } else {
+                    const error = await response.json();
+                    alert(error.message || 'Failed to submit request');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while submitting request');
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('statusFilter').addEventListener('change', loadRequests);
+        document.addEventListener('DOMContentLoaded', () => {
+            loadRequests();
+        });
+
+        // Toggle request modal
+        function toggleRequestModal() {
+            const modal = document.getElementById('requestModal');
+            modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+            if (modal.style.display === 'flex') {
+                loadGasItems();
+                loadOutlets();
+            }
+        }
+
+        // Load gas items and prices
+        async function loadGasItems() {
+            try {
+                const response = await fetch('http://localhost:8080/api/gas/domestic');
+                const items = await response.json();
+                const select = document.querySelector('select[name="gasId"]');
+                select.innerHTML = '<option value="">Select Gas Type</option>' +
+                    items.map(item =>
+                        `<option value="${item.id}" data-price="${item.price}">${item.item}</option>`
+                    ).join('');
+            } catch (error) {
+                console.error('Error loading gas items:', error);
+            }
+        }
+
+        // Load outlets
+        async function loadOutlets() {
+            try {
+                const response = await fetch('http://localhost:8080/api/gas/verified/retail-and-all', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                const outlets = await response.json();
+                const select = document.querySelector('select[name="outlet"]');
+                select.innerHTML = '<option value="">Select Outlet</option>' +
+                    outlets.map(outlet =>
+                        `<option value="${outlet.id}">${outlet.outletName || outlet.name} - ${outlet.address}</option>`
+                    ).join('');
+            } catch (error) {
+                console.error('Error loading outlets:', error);
+            }
+        }
+
+        // Update unit price based on selected item
+        function updateUnitPrice() {
+            const gasSelect = document.querySelector('select[name="gasId"]');
+            const selectedOption = gasSelect.options[gasSelect.selectedIndex];
+            const unitPriceInput = document.querySelector('input[name="unitPrice"]');
+            const price = selectedOption.dataset.price || '';
+            unitPriceInput.value = price;
+            updateTotalPrice();;
+        }
+
+        // Update total price
+        function updateTotalPrice() {
+            const quantity = parseInt(document.querySelector('input[name="quantity"]').value) || 0;
+            const unitPrice = parseFloat(document.querySelector('input[name="unitPrice"]').value) || 0;
+            const totalPriceInput = document.querySelector('input[name="totalPrice"]');
+            totalPriceInput.value = (quantity * unitPrice).toFixed(2);
+        }
+    </script>
+</body>
+</html>
